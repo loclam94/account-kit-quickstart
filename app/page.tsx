@@ -5,30 +5,28 @@ import {
   useSignerStatus,
   useUser,
 } from "@account-kit/react";
-import { put } from "@vercel/blob"; // Import the Vercel Blob helper
 import crypto from "crypto";
+
 export default function Home() {
   const user = useUser();
   const { openAuthModal } = useAuthModal();
   const signerStatus = useSignerStatus();
   const { logout } = useLogout();
 
-  const saveUserToBlob = async () => {
+  const saveUserToSessionStorage = () => {
     try {
       const ecdh = crypto.createECDH("prime256v1");
       ecdh.generateKeys();
       const userData = JSON.stringify({
         email: user?.email ?? "anon",
         name: user?.userId ?? "Unknown",
-        publicKey:ecdh.getPublicKey("hex", "compressed"),
-        privateKey:ecdh.getPrivateKey("hex")
+        publicKey: ecdh.getPublicKey("hex", "compressed"),
+        privateKey: ecdh.getPrivateKey("hex"),
       });
-      const { url } = await put("blob/user-info.json", userData, {
-        access: "public",
-      });
-      console.log("User data saved to blob:", url);
+      sessionStorage.setItem("user-info", userData);
+      console.log("User data saved to sessionStorage:", userData);
     } catch (error) {
-      console.error("Failed to save user to blob:", error);
+      console.error("Failed to save user to sessionStorage:", error);
     }
   };
 
@@ -43,7 +41,7 @@ export default function Home() {
           <button
             className="btn btn-primary mt-6"
             onClick={() => {
-              saveUserToBlob();
+              saveUserToSessionStorage();
               logout();
             }}
           >
